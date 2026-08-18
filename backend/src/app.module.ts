@@ -6,6 +6,6 @@ import { JobsModule } from './jobs/jobs.module';
 @Module({
   imports: [JobsModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService]
 })
 export class AppModule {}
