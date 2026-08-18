@@ -1,8 +1,6 @@
-export type JobStatus =
-  'pending' | 'in_progress' | 'completed' | 'cancelled' | 'failed';
+export type JobStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'failed';
 
-export type UrlStatus =
-  'pending' | 'in_progress' | 'success' | 'error' | 'cancelled';
+export type UrlStatus = 'pending' | 'in_progress' | 'success' | 'error' | 'cancelled';
 
 export interface JobUrl {
   url: string;
