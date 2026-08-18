@@ -11,7 +11,7 @@ export class JobsController {
     const job = this.jobsService.create(dto);
 
     return {
-      jobId: job.id,
+      jobId: job.id
     };
   }
 

@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { JobsProcessor } from './jobs.processor';
 import { randomUUID } from 'crypto';
 import { CreateJobDto } from './dto/create-job.dto';
 import { Job } from './jobs.types';
 
 @Injectable()
 export class JobsService {
+  constructor(private readonly jobsProcessor: JobsProcessor) {}
   private readonly jobs = new Map<string, Job>();
 
   create(dto: CreateJobDto): Job {
@@ -12,20 +14,36 @@ export class JobsService {
       id: randomUUID(),
       createdAt: new Date().toISOString(),
       status: 'pending',
-      urls: dto.urls.map((url) => ({
+      urls: dto.urls.map(url => ({
         url,
-        status: 'pending',
-      })),
+        status: 'pending'
+      }))
     };
 
     this.jobs.set(job.id, job);
 
+    void this.jobsProcessor.process(job);
+
     return job;
   }
 
-  findAll(): Job[] {
-    return Array.from(this.jobs.values());
+  findAll() {
+    return Array.from(this.jobs.values()).map(job => {
+      const successCount = job.urls.filter(url => url.status === 'success').length;
+
+      const errorCount = job.urls.filter(url => url.status === 'error').length;
+
+      return {
+        id: job.id,
+        createdAt: job.createdAt,
+        status: job.status,
+        urlCount: job.urls.length,
+        successCount,
+        errorCount
+      };
+    });
   }
+
   findOne(id: string): Job {
     const job = this.jobs.get(id);
 
