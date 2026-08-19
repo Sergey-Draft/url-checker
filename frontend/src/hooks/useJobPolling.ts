@@ -4,14 +4,18 @@ import { useJobsStore } from '../store/jobs-store';
 
 const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
 
+export const POLL_INTERVAL_MS = 1000;
+
 export function useJobPolling(): void {
   const activeJobId = useJobsStore((state) => state.activeJobId);
   const activeJob = useJobsStore((state) => state.activeJob);
 
   const setActiveJob = useJobsStore((state) => state.setActiveJob);
+  const setPolling = useJobsStore((state) => state.setPolling);
 
   useEffect(() => {
     if (!activeJobId) {
+      setPolling(false);
       return;
     }
 
@@ -19,8 +23,11 @@ export function useJobPolling(): void {
       activeJob &&
       TERMINAL_STATUSES.includes(activeJob.status)
     ) {
+      setPolling(false);
       return;
     }
+
+    setPolling(true);
 
     let cancelled = false;
 
@@ -48,11 +55,11 @@ export function useJobPolling(): void {
 
     const intervalId = window.setInterval(() => {
       void poll();
-    }, 1000);
+    }, POLL_INTERVAL_MS);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [activeJobId, activeJob?.status, setActiveJob]);
+  }, [activeJobId, activeJob?.status, setActiveJob, setPolling]);
 }

@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Job, JobUrl } from './jobs.types';
 
+const REQUEST_TIMEOUT_MS = 8_000;
+
 @Injectable()
 export class JobsProcessor {
   async process(job: Job): Promise<void> {
@@ -19,7 +21,7 @@ export class JobsProcessor {
         const currentIndex = nextIndex;
         nextIndex += 1;
 
-        await this.processUrl(job, pendingUrls[currentIndex]);
+        await this.processUrl(pendingUrls[currentIndex]);
       }
     };
 
@@ -36,32 +38,48 @@ export class JobsProcessor {
     return job.status === 'cancelled';
   }
 
-  private async processUrl(job: Job, url: JobUrl): Promise<void> {
+  private async processUrl(url: JobUrl): Promise<void> {
     url.status = 'in_progress';
     url.startedAt = new Date().toISOString();
 
+    let httpStatus: number | undefined;
+    let errorMessage: string | undefined;
+
     try {
-      const response = await fetch(url.url, {
-        method: 'HEAD',
-        redirect: 'manual'
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      url.httpStatus = response.status;
+      try {
+        const response = await fetch(url.url, {
+          method: 'HEAD',
+          redirect: 'manual',
+          signal: controller.signal
+        });
 
-      await this.delay();
-
-      url.status = 'success';
-    } catch (error) {
-      await this.delay();
-
-      url.status = 'error';
-      url.error = error instanceof Error ? error.message : 'Unknown error';
-    } finally {
-      url.finishedAt = new Date().toISOString();
-
-      if (url.startedAt) {
-        url.duration = new Date(url.finishedAt).getTime() - new Date(url.startedAt).getTime();
+        httpStatus = response.status;
+      } finally {
+        clearTimeout(timeout);
       }
+    } catch (error) {
+      errorMessage =
+        error instanceof Error && error.name === 'AbortError'
+          ? 'Request timed out'
+          : error instanceof Error
+            ? error.message
+            : 'Unknown error';
+    }
+
+    await this.delay();
+
+    url.finishedAt = new Date().toISOString();
+    url.duration = new Date(url.finishedAt).getTime() - new Date(url.startedAt).getTime();
+
+    if (errorMessage) {
+      url.status = 'error';
+      url.error = errorMessage;
+    } else {
+      url.status = 'success';
+      url.httpStatus = httpStatus;
     }
   }
 
