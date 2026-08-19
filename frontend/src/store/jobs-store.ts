@@ -13,12 +13,16 @@ interface JobsState {
   activeJob: Job | null;
   isLoading: boolean;
   error: string | null;
+  lastUpdatedAt: string | null;
+  isPolling: boolean;
 
   loadJobs: () => Promise<void>;
+  refreshJobs: () => Promise<void>;
   selectJob: (id: string) => Promise<void>;
   createNewJob: (urls: string[]) => Promise<void>;
   cancelActiveJob: () => Promise<void>;
   setActiveJob: (job: Job) => void;
+  setPolling: (isPolling: boolean) => void;
 }
 
 export const useJobsStore = create<JobsState>((set, get) => ({
@@ -27,15 +31,22 @@ export const useJobsStore = create<JobsState>((set, get) => ({
   activeJob: null,
   isLoading: false,
   error: null,
+  lastUpdatedAt: null,
+  isPolling: false,
 
   setActiveJob: (job) => {
     if (get().activeJobId !== job.id) {
       return;
     }
-  
+
     set({
       activeJob: job,
+      lastUpdatedAt: new Date().toISOString(),
     });
+  },
+
+  setPolling: (isPolling) => {
+    set({ isPolling });
   },
 
   loadJobs: async () => {
@@ -45,9 +56,8 @@ export const useJobsStore = create<JobsState>((set, get) => ({
     });
 
     try {
-        
       const jobs = await getJobs();
-      console.log('JOBS:', jobs);
+
       set({
         jobs,
         isLoading: false,
@@ -57,6 +67,16 @@ export const useJobsStore = create<JobsState>((set, get) => ({
         isLoading: false,
         error: 'Failed to load jobs',
       });
+    }
+  },
+
+  refreshJobs: async () => {
+    try {
+      const jobs = await getJobs();
+
+      set({ jobs });
+    } catch {
+      // Silent background refresh: keep the previously loaded list on failure.
     }
   },
 
@@ -78,6 +98,7 @@ export const useJobsStore = create<JobsState>((set, get) => ({
       set({
         activeJob: job,
         isLoading: false,
+        lastUpdatedAt: new Date().toISOString(),
       });
     } catch {
       if (get().activeJobId !== id) {
@@ -106,10 +127,9 @@ export const useJobsStore = create<JobsState>((set, get) => ({
         activeJobId: jobId,
         activeJob: job,
         isLoading: false,
+        lastUpdatedAt: new Date().toISOString(),
       });
-      console.log('CREATED JOB:', jobId);
       await get().loadJobs();
-      console.log('JOB DETAILS:', job);
     } catch {
       set({
         isLoading: false,
@@ -134,6 +154,7 @@ export const useJobsStore = create<JobsState>((set, get) => ({
 
       set({
         activeJob: job,
+        lastUpdatedAt: new Date().toISOString(),
       });
 
       await get().loadJobs();
