@@ -7,6 +7,6 @@ React + TypeScript + Vite SPA для сервиса проверки URL. Общ
 ## Быстрый старт
 
 ```bash
-npm install
-npm run dev
+yarn install
+yarn dev
 ```

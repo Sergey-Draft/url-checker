@@ -6,13 +6,13 @@ NestJS REST API для асинхронной проверки списка URL.
 ## Быстрый старт
 
 ```bash
-npm install
-npm run start:dev
+yarn install
+yarn start:dev
 ```
 
 ## Тесты
 
 ```bash
-npm run test
-npm run test:e2e
+yarn test
+yarn test:e2e
 ```

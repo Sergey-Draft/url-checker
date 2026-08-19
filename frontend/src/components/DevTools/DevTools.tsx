@@ -5,7 +5,7 @@ import { POLL_INTERVAL_MS } from '../../hooks/useJobPolling';
 const CONCURRENCY_LIMIT = 5;
 
 export function DevTools() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const activeJob = useJobsStore((state) => state.activeJob);
   const isPolling = useJobsStore((state) => state.isPolling);
   const lastUpdatedAt = useJobsStore((state) => state.lastUpdatedAt);

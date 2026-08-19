@@ -42,7 +42,7 @@ export function JobsPage() {
   }, [hasUnsettledJobs, refreshJobs]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-4 px-4 py-8">
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-4 px-4 py-8">
       <header>
         <h1 className="font-display text-3xl text-brown-dark">URL Checker</h1>
         <p className="text-sm text-brown">Asynchronous URL health-check service</p>
@@ -54,19 +54,25 @@ export function JobsPage() {
         </div>
       )}
 
-      <CreateJobForm onSubmit={createNewJob} />
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="flex flex-col gap-4">
+          <CreateJobForm onSubmit={createNewJob} />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <JobsList jobs={jobs} activeJobId={activeJobId} onSelect={selectJob} />
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <JobsList jobs={jobs} activeJobId={activeJobId} onSelect={selectJob} />
 
-        <JobDetails
-          job={activeJob}
-          isLoading={isLoading}
-          onCancel={cancelActiveJob}
-        />
-      </section>
+            <JobDetails
+              job={activeJob}
+              isLoading={isLoading}
+              onCancel={cancelActiveJob}
+            />
+          </section>
+        </div>
 
-      <DevTools />
+        <div className="lg:sticky lg:top-8">
+          <DevTools />
+        </div>
+      </div>
     </main>
   );
 }
